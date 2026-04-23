@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Base de datos para el MS de Usuarios (NestJS)
+  users-db:
+    image: mongo:latest
+    container_name: ecommerce_users_db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: SuperSecretPassword123!
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # Base de datos para el MS de Productos (NestJS)
+  products-db:
+    image: postgres:15-alpine
+    container_name: ecommerce_products_db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: SuperSecretPassword123!
+      POSTGRES_DB: products_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Base de datos para el MS de Pedidos (.NET)
+  orders-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ecommerce_orders_db
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: SuperSecretPassword123!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+volumes:
+  mongo_data:
+  postgres_data:
+  sqlserver_data:
