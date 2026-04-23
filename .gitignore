@@ -1,0 +1,58 @@
+# ==========================================
+# ECOSISTEMA NODE.JS / NESTJS (Usuarios, Productos)
+# ==========================================
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Archivos de entorno local (nunca subir contraseñas)
+.env
+.env.local
+.env.development
+
+# ==========================================
+# ECOSISTEMA .NET (Orders, API Gateway)
+# ==========================================
+# Carpetas de compilación
+bin/
+obj/
+
+# Archivos específicos del usuario y temporales
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+# Archivos de Visual Studio / Rider
+.vs/
+.idea/
+*.ReSharper
+
+# Resultados de pruebas
+TestResults/
+
+# ==========================================
+# SISTEMA OPERATIVO Y HERRAMIENTAS
+# ==========================================
+# Windows
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VS Code (Opcional: puedes comentar esto si quieres compartir configuraciones del workspace)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Docker (Archivos temporales o de volumen si mapeaste alguno localmente por error)
+.docker/F
