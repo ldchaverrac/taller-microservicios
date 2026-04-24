@@ -4,21 +4,24 @@ using OrdersService.Persistence;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Agregar Controladores
 builder.Services.AddControllers();
 
-// Configurar SQL Server
-builder.Services.AddDbContext<OrderDbContext>();
+builder.Services.AddDbContext<OrderDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configurar HttpClient para comunicarse con los otros microservicios
 builder.Services.AddHttpClient();
 
-// Registrar nuestra capa de aplicación
 builder.Services.AddScoped<IOrderAppService, OrderAppService>();
 
 WebApplication app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+    db.Database.Migrate();
+}
+
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run("http://localhost:7000");
+app.Run("http://+:7000");

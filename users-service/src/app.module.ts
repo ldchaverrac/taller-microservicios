@@ -4,12 +4,16 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
 
+function env(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Variable de entorno requerida: ${name}`);
+  return value;
+}
+
 @Module({
   imports: [
     UsersModule,
-    MongooseModule.forRoot('mongodb://admin:SuperSecretPassword123!@localhost:27017', {
-      dbName: 'users_db'
-    })
+    MongooseModule.forRoot(env('DB_URI'), { dbName: env('DB_NAME') })
   ],
   controllers: [AppController],
   providers: [AppService]

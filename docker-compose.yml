@@ -1,7 +1,8 @@
 version: '3.8'
 
 services:
-  # Base de datos para el MS de Usuarios (NestJS)
+  # ── Bases de datos ─────────────────────────────────────────────────────────
+
   users-db:
     image: mongo:latest
     container_name: ecommerce_users_db
@@ -13,8 +14,13 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  # Base de datos para el MS de Productos (NestJS)
   products-db:
     image: postgres:15-alpine
     container_name: ecommerce_products_db
@@ -27,8 +33,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d products_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  # Base de datos para el MS de Pedidos (.NET)
   orders-db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: ecommerce_orders_db
@@ -37,9 +47,77 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: SuperSecretPassword123!
     ports:
-      - "1433:1433"
+      - "1434:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'SuperSecretPassword123!' -Q 'SELECT 1' -b -C"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── Microservicios ─────────────────────────────────────────────────────────
+
+  users-service:
+    build: ./users-service
+    container_name: ecommerce_users_service
+    restart: always
+    environment:
+      PORT: 3000
+      DB_URI: mongodb://admin:SuperSecretPassword123!@users-db:27017
+      DB_NAME: users_db
+    ports:
+      - "3000:3000"
+    depends_on:
+      users-db:
+        condition: service_healthy
+
+  products-service:
+    build: ./products-service
+    container_name: ecommerce_products_service
+    restart: always
+    environment:
+      PORT: 5000
+      DB_HOST: products-db
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASSWORD: SuperSecretPassword123!
+      DB_NAME: products_db
+    ports:
+      - "5000:5000"
+    depends_on:
+      products-db:
+        condition: service_healthy
+
+  orders-service:
+    build: ./OrdersService
+    container_name: ecommerce_orders_service
+    restart: always
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=orders-db,1433;Database=OrdersDb;User Id=sa;Password=SuperSecretPassword123!;TrustServerCertificate=True;"
+      GatewayUrl: http://api-gateway:4000
+    ports:
+      - "7000:7000"
+    depends_on:
+      orders-db:
+        condition: service_healthy
+
+  api-gateway:
+    build: ./ApiGateway
+    container_name: ecommerce_api_gateway
+    restart: always
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./ApiGateway/ocelot.Production.json:/app/ocelot.json
+    depends_on:
+      - users-service
+      - products-service
+      - orders-service
 
 volumes:
   mongo_data:
